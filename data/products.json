@@ -1,0 +1,29 @@
+[
+  {
+    "id": "nova-01",
+    "name": "Nebula Nova Kit",
+    "price": 79.00,
+    "description": "Dual mesh coils, adaptive wattage, crystal airflow for velvet clouds.",
+    "category": "Devices",
+    "image": "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=800&q=80",
+    "created_at": "2024-01-05T12:00:00Z"
+  },
+  {
+    "id": "drift-berry",
+    "name": "Drift Berry Ice",
+    "price": 19.50,
+    "description": "Frosted blueberry sorbet with a cool exhale, nic salts balanced for MTL.",
+    "category": "E-liquid",
+    "image": "https://images.unsplash.com/photo-1524253482453-3fed8d2fe12b?auto=format&fit=crop&w=800&q=80",
+    "created_at": "2024-01-05T12:00:00Z"
+  },
+  {
+    "id": "velvet-mint",
+    "name": "Velvet Mint Pods",
+    "price": 24.00,
+    "description": "Silky mint ribbons with low sweetness. 4-pack of leak-proof pods.",
+    "category": "Pods",
+    "image": "https://images.unsplash.com/photo-1530023367847-a683933f4177?auto=format&fit=crop&w=800&q=80",
+    "created_at": "2024-01-05T12:00:00Z"
+  }
+]
