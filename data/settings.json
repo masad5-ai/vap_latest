@@ -1,0 +1,32 @@
+{
+  "branding": {
+    "store_name": "VaporPulse",
+    "tagline": "Midnight luxuries and bold citrus twists.",
+    "accent": "#6ce7ff",
+    "support_email": "support@vaporpulse.test",
+    "whatsapp": "+1-555-123-9876"
+  },
+  "payments": {
+    "custom_gateway": {
+      "enabled": true,
+      "label": "VaporPulse SecurePay",
+      "instructions": "Complete payment via our PCI-grade SecurePay modal."
+    },
+    "cod": {
+      "enabled": true,
+      "label": "Cash on Delivery",
+      "instructions": "Pay the courier when your parcel arrives."
+    }
+  },
+  "notifications": {
+    "email": {
+      "enabled": true,
+      "from": "orders@vaporpulse.test"
+    },
+    "whatsapp": {
+      "enabled": true,
+      "number": "+1-555-123-9876",
+      "signature": "Team VaporPulse"
+    }
+  }
+}
