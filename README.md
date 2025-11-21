@@ -14,3 +14,6 @@ A neon-inspired PHP/MySQL-ready ecommerce prototype for a vape storefront with c
 - Theme tuned for vape retailers with gradients, badges, and elevated cards.
 
 See `docs/ARCHITECTURE.md` for structure and next steps.
+
+## Merge readiness
+If GitHub reports that the branch has conflicts, pull the latest `main` branch locally and merge it into this branch. There are no conflict markers in the tracked files, and consistent line endings (enforced via `.gitattributes`) help avoid false positives.
