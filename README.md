@@ -8,9 +8,9 @@ A neon-inspired PHP/MySQL-ready ecommerce prototype for a vape storefront with c
 3. Update `src/config.php` with your MySQL credentials and swap JSON persistence for real tables when ready.
 
 ## Features
-- Customer registration/login, catalog browsing, cart management, checkout, and order timeline.
-- Admin dashboard for product creation, order status updates, and configurable branding.
-- Payment, WhatsApp, and email gateway settings controllable from the admin panel.
+- Customer registration/login, catalog browsing with search, cart management, checkout, saved profile, and order timeline.
+- Admin dashboard for product creation, editing, inventory status, order status with audit history, and configurable branding.
+- Payment, WhatsApp, and email gateway settings controllable from the admin panel plus customer notification preferences.
 - Theme tuned for vape retailers with gradients, badges, and elevated cards.
 
 See `docs/ARCHITECTURE.md` for structure and next steps.

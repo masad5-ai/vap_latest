@@ -5,6 +5,13 @@
     "email": "admin@vaporpulse.test",
     "password": "$2y$12$nmXsPAP2xoKIZvtacNA0rOkHnU9iTBJ9jvAsZrYplgXEqZMepBiSC",
     "role": "admin",
-    "created_at": "2024-01-05T12:00:00Z"
+    "created_at": "2024-01-05T12:00:00Z",
+    "profile": {
+      "phone": "+1 415 555 0101",
+      "address": "99 Vapor Ave",
+      "city": "San Francisco",
+      "whatsapp_updates": true,
+      "email_updates": true
+    }
   }
 ]

@@ -27,20 +27,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 (float)$_POST['price'],
                 trim($_POST['description']),
                 trim($_POST['category']),
-                trim($_POST['image'])
+                trim($_POST['image']),
+                (int)($_POST['stock'] ?? 25),
+                $_POST['status'] ?? 'active'
             );
             $message = 'Product ' . $product['name'] . ' created';
             $products = load_products();
+        } elseif ($action === 'update_product') {
+            $updated = update_product($_POST['product_id'], [
+                'name' => trim($_POST['name']),
+                'price' => (float)$_POST['price'],
+                'description' => trim($_POST['description']),
+                'category' => trim($_POST['category']),
+                'image' => trim($_POST['image']),
+                'stock' => (int)$_POST['stock'],
+                'status' => $_POST['status'] ?? 'active',
+            ]);
+            $message = 'Updated ' . $updated['name'];
+            $products = load_products();
+        } elseif ($action === 'delete_product') {
+            delete_product($_POST['product_id']);
+            $message = 'Product removed';
+            $products = load_products();
         } elseif ($action === 'update_order_status') {
-            $orders = load_orders();
-            foreach ($orders as &$order) {
-                if ($order['id'] === $_POST['order_id']) {
-                    $order['status'] = $_POST['status'];
-                }
-            }
-            unset($order);
-            save_orders($orders);
-            $message = 'Order status updated';
+            $updated = update_order_status($_POST['order_id'], $_POST['status'], $user['name'] ?? 'Admin');
+            $message = 'Order #' . $updated['id'] . ' now ' . $updated['status'];
+            $orders = array_reverse(load_orders());
         } elseif ($action === 'save_settings') {
             $settings['branding']['store_name'] = trim($_POST['store_name']);
             $settings['branding']['tagline'] = trim($_POST['tagline']);
@@ -125,6 +137,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label>Category<input name="category" required></label>
                 <label>Image URL<input name="image" placeholder="/assets/img/device.png"></label>
                 <label>Description<textarea name="description" rows="3"></textarea></label>
+                <label>Stock<input type="number" name="stock" min="0" value="25"></label>
+                <label>Status
+                    <select name="status">
+                        <option value="active">Active</option>
+                        <option value="draft">Draft</option>
+                        <option value="archived">Archived</option>
+                    </select>
+                </label>
                 <button class="button primary" type="submit">Create</button>
             </form>
         </section>
@@ -134,11 +154,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="list">
                 <?php foreach ($products as $product): ?>
                     <div class="list-item">
-                        <div>
-                            <strong><?= htmlspecialchars($product['name']) ?></strong>
-                            <p class="muted">$<?= number_format($product['price'], 2) ?> • <?= htmlspecialchars($product['category']) ?></p>
-                        </div>
-                        <span class="pill">ID <?= htmlspecialchars($product['id']) ?></span>
+                        <form method="post" class="form-inline">
+                            <input type="hidden" name="action" value="update_product">
+                            <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']) ?>">
+                            <div>
+                                <label>Name<input name="name" value="<?= htmlspecialchars($product['name']) ?>" required></label>
+                                <label>Price<input type="number" step="0.01" name="price" value="<?= htmlspecialchars($product['price']) ?>" required></label>
+                                <label>Category<input name="category" value="<?= htmlspecialchars($product['category']) ?>" required></label>
+                                <label>Image<input name="image" value="<?= htmlspecialchars($product['image']) ?>"></label>
+                            </div>
+                            <div class="stacked">
+                                <label>Stock<input type="number" name="stock" min="0" value="<?= htmlspecialchars($product['stock'] ?? 0) ?>"></label>
+                                <label>Status
+                                    <select name="status">
+                                        <?php foreach (['active','draft','archived'] as $status): ?>
+                                            <option value="<?= $status ?>" <?= ($product['status'] ?? 'active') === $status ? 'selected' : '' ?>><?= ucfirst($status) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </label>
+                                <label>Description<textarea name="description" rows="2"><?= htmlspecialchars($product['description']) ?></textarea></label>
+                            </div>
+                            <div class="actions">
+                                <span class="pill">ID <?= htmlspecialchars($product['id']) ?></span>
+                                <span class="pill muted">Stock: <?= htmlspecialchars($product['stock'] ?? 0) ?></span>
+                                <button class="button ghost" type="submit">Save</button>
+                            </div>
+                        </form>
+                        <form method="post" class="inline-form">
+                            <input type="hidden" name="action" value="delete_product">
+                            <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']) ?>">
+                            <button class="button danger" type="submit">Remove</button>
+                        </form>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -171,6 +217,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php endforeach; ?>
                         </ul>
                         <div class="order-meta">$<?= number_format($order['totals']['total'], 2) ?> • <?= htmlspecialchars($order['payment_method']) ?></div>
+                        <div class="order-history">
+                            <?php foreach ($order['history'] ?? [] as $entry): ?>
+                                <span class="pill muted"><?= htmlspecialchars($entry['status']) ?> • <?= date('M j, H:i', strtotime($entry['at'])) ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                        <p class="muted small">Ship to: <?= htmlspecialchars($order['shipping']['address']) ?>, <?= htmlspecialchars($order['shipping']['city']) ?> • WhatsApp: <?= !empty($order['shipping']['whatsapp_updates']) ? 'Enabled' : 'Off' ?></p>
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>

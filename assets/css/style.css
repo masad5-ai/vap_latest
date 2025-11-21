@@ -203,3 +203,62 @@ input, textarea, select {
 }
 .order-head { display: flex; justify-content: space-between; align-items: center; }
 .order-meta { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 10px 0 20px;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.form-inline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+}
+
+.stacked {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.order-history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.small { font-size: 12px; }
+
+.button.danger {
+  background: rgba(255,79,112,0.1);
+  color: #ff4f70;
+  border: 1px solid rgba(255,79,112,0.4);
+}
+
+@media (max-width: 960px) {
+  .dashboard { grid-template-columns: 1fr; }
+}

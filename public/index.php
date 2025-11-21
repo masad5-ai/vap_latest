@@ -13,6 +13,13 @@ $user = current_user();
 $products = load_products();
 $message = null;
 $section = $_GET['view'] ?? 'home';
+$query = trim($_GET['q'] ?? '');
+
+if ($query) {
+    $products = array_values(array_filter($products, function ($product) use ($query) {
+        return stripos($product['name'], $query) !== false || stripos($product['category'], $query) !== false;
+    }));
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -45,6 +52,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 logout_user();
                 header('Location: /index.php');
                 exit;
+            case 'update_profile':
+                if (!$user) {
+                    throw new RuntimeException('Please sign in first');
+                }
+                $user = update_user_profile($user['id'], [
+                    'phone' => $_POST['phone'] ?? '',
+                    'address' => $_POST['address'] ?? '',
+                    'city' => $_POST['city'] ?? '',
+                    'whatsapp_updates' => !empty($_POST['whatsapp_updates']),
+                    'email_updates' => !empty($_POST['email_updates']),
+                ]);
+                $message = 'Profile updated';
+                $section = 'orders';
+                break;
             case 'checkout':
                 $totals = cart_totals();
                 if (empty($totals['lines'])) {
@@ -137,8 +158,14 @@ $orders = array_reverse(load_orders());
                     <p>Exclusive drops and concierge support.</p>
                 </div>
             </section>
+            <form method="get" class="search-bar">
+                <input type="hidden" name="view" value="products">
+                <input type="search" name="q" placeholder="Search flavors, kits, pods" value="<?= htmlspecialchars($query) ?>">
+                <button class="button ghost" type="submit">Search</button>
+            </form>
             <section class="grid">
                 <?php foreach ($products as $product): ?>
+                    <?php if (($product['status'] ?? 'active') !== 'active') { continue; } ?>
                     <article class="card">
                         <img src="<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>">
                         <div class="card-body">
@@ -147,6 +174,7 @@ $orders = array_reverse(load_orders());
                             <p><?= htmlspecialchars($product['description']) ?></p>
                             <div class="price-row">
                                 <strong>$<?= number_format($product['price'], 2) ?></strong>
+                                <span class="pill muted">Stock <?= (int)($product['stock'] ?? 0) ?></span>
                                 <form method="post" class="inline-form">
                                     <input type="hidden" name="action" value="add_to_cart">
                                     <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']) ?>">
@@ -200,8 +228,8 @@ $orders = array_reverse(load_orders());
                     <input type="hidden" name="action" value="checkout">
                     <label>Name<input required name="name" value="<?= htmlspecialchars($user['name'] ?? '') ?>"></label>
                     <label>Email<input required type="email" name="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>"></label>
-                    <label>Address<textarea required name="address" rows="3"></textarea></label>
-                    <label>City<input required name="city"></label>
+                    <label>Address<textarea required name="address" rows="3"><?= htmlspecialchars($user['profile']['address'] ?? '') ?></textarea></label>
+                    <label>City<input required name="city" value="<?= htmlspecialchars($user['profile']['city'] ?? '') ?>"></label>
                     <label>Payment method
                         <select name="payment_method">
                             <?php foreach ($settings['payments'] as $key => $payment): ?>
@@ -211,7 +239,7 @@ $orders = array_reverse(load_orders());
                             <?php endforeach; ?>
                         </select>
                     </label>
-                    <label class="checkbox"><input type="checkbox" name="whatsapp_updates" checked> Send me WhatsApp updates</label>
+                    <label class="checkbox"><input type="checkbox" name="whatsapp_updates" <?= !empty($user['profile']['whatsapp_updates']) ? 'checked' : '' ?>> Send me WhatsApp updates</label>
                     <button class="button primary" type="submit">Place order</button>
                 </form>
             </section>
@@ -243,25 +271,60 @@ $orders = array_reverse(load_orders());
 
         <?php if ($section === 'orders' && $user): ?>
             <section class="panel">
-                <h2>Your orders</h2>
-                <?php $userOrders = array_filter($orders, fn($o) => ($o['customer']['id'] ?? null) === $user['id']); ?>
-                <?php if (empty($userOrders)): ?>
-                    <p>No orders yet.</p>
-                <?php else: ?>
-                    <div class="timeline">
-                        <?php foreach ($userOrders as $order): ?>
-                            <div class="timeline-item">
-                                <div class="timeline-meta">#<?= $order['id'] ?> • <?= htmlspecialchars($order['status']) ?> • <?= htmlspecialchars($order['payment_method'] ?? 'custom_gateway') ?></div>
-                                <strong>$<?= number_format($order['totals']['total'], 2) ?></strong>
-                                <p><?= count($order['items']) ?> items • <?= htmlspecialchars($order['shipping']['city']) ?></p>
+                <div class="dashboard">
+                    <div>
+                        <h2>Your dashboard</h2>
+                        <?php $userOrders = array_filter($orders, fn($o) => ($o['customer']['id'] ?? null) === $user['id']); ?>
+                        <?php $totalSpend = array_sum(array_map(fn($o) => $o['totals']['total'] ?? 0, $userOrders)); ?>
+                        <div class="metric-row">
+                            <div class="metric-card">
+                                <p class="muted">Orders</p>
+                                <h3><?= count($userOrders) ?></h3>
+                                <p><?= count($userOrders) ? 'Reorder your favorites anytime.' : 'Start with a curated kit.' ?></p>
                             </div>
-                        <?php endforeach; ?>
+                            <div class="metric-card">
+                                <p class="muted">Lifetime value</p>
+                                <h3>$<?= number_format($totalSpend, 2) ?></h3>
+                                <p>Earn rewards with every drop.</p>
+                            </div>
+                            <div class="metric-card">
+                                <p class="muted">Notifications</p>
+                                <h3><?= !empty($user['profile']['whatsapp_updates']) ? 'WhatsApp' : 'Email' ?></h3>
+                                <p>Delivery alerts and refill nudges.</p>
+                            </div>
+                        </div>
+                        <h3>Recent activity</h3>
+                        <?php if (empty($userOrders)): ?>
+                            <p>No orders yet.</p>
+                        <?php else: ?>
+                            <div class="timeline">
+                                <?php foreach ($userOrders as $order): ?>
+                                    <div class="timeline-item">
+                                        <div class="timeline-meta">#<?= $order['id'] ?> • <?= htmlspecialchars($order['status']) ?> • <?= htmlspecialchars($order['payment_method'] ?? 'custom_gateway') ?></div>
+                                        <strong>$<?= number_format($order['totals']['total'], 2) ?></strong>
+                                        <p><?= count($order['items']) ?> items • <?= htmlspecialchars($order['shipping']['city']) ?></p>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                <?php endif; ?>
-                <form method="post" class="inline-form">
-                    <input type="hidden" name="action" value="logout">
-                    <button class="button ghost" type="submit">Logout</button>
-                </form>
+                    <aside class="panel">
+                        <h3>Profile & preferences</h3>
+                        <form method="post" class="form-grid">
+                            <input type="hidden" name="action" value="update_profile">
+                            <label>Phone<input name="phone" value="<?= htmlspecialchars($user['profile']['phone'] ?? '') ?>" placeholder="WhatsApp ready"></label>
+                            <label>Address<textarea name="address" rows="2" placeholder="Delivery address"><?= htmlspecialchars($user['profile']['address'] ?? '') ?></textarea></label>
+                            <label>City<input name="city" value="<?= htmlspecialchars($user['profile']['city'] ?? '') ?>"></label>
+                            <label class="checkbox"><input type="checkbox" name="whatsapp_updates" <?= !empty($user['profile']['whatsapp_updates']) ? 'checked' : '' ?>> WhatsApp updates</label>
+                            <label class="checkbox"><input type="checkbox" name="email_updates" <?= !empty($user['profile']['email_updates']) ? 'checked' : '' ?>> Email updates</label>
+                            <button class="button primary" type="submit">Save profile</button>
+                        </form>
+                        <form method="post" class="inline-form">
+                            <input type="hidden" name="action" value="logout">
+                            <button class="button ghost" type="submit">Logout</button>
+                        </form>
+                    </aside>
+                </div>
             </section>
         <?php endif; ?>
     </main>
