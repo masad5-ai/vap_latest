@@ -28,13 +28,46 @@ function create_order(array $customer, array $totals, array $shipping): array
             'email' => $customer['email'] ?? $shipping['email'],
         ],
         'shipping' => $shipping,
+        'shipping_option' => $totals['shipping_details'] ?? null,
         'items' => $totals['lines'],
         'totals' => $totals,
         'status' => 'pending',
         'payment_method' => $shipping['payment_method'] ?? 'custom_gateway',
+        'notifications' => [
+            'whatsapp' => !empty($shipping['whatsapp_updates']),
+            'email' => true,
+        ],
+        'history' => [
+            [
+                'status' => 'pending',
+                'note' => 'Order placed',
+                'at' => date('c'),
+            ],
+        ],
         'created_at' => date('c'),
     ];
     $orders[] = $order;
     save_orders($orders);
     return $order;
+}
+
+function update_order_status(string $orderId, string $status, string $actor = 'System'): array
+{
+    $orders = load_orders();
+    foreach ($orders as &$order) {
+        if ($order['id'] === $orderId) {
+            $order['status'] = $status;
+            $order['history'] = array_merge($order['history'] ?? [], [
+                [
+                    'status' => $status,
+                    'note' => 'Updated by ' . $actor,
+                    'at' => date('c'),
+                ],
+            ]);
+            save_orders($orders);
+            return $order;
+        }
+    }
+
+    throw new RuntimeException('Order not found');
 }
