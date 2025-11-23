@@ -1,0 +1,61 @@
+{
+  "branding": {
+    "store_name": "VaporPulse",
+    "tagline": "Midnight luxuries and bold citrus twists.",
+    "accent": "#6ce7ff",
+    "support_email": "support@vaporpulse.test",
+    "whatsapp": "+1-555-123-9876"
+  },
+  "payments": {
+    "custom_gateway": {
+      "enabled": true,
+      "label": "VaporPulse SecurePay",
+      "instructions": "Complete payment via our PCI-grade SecurePay modal."
+    },
+    "cod": {
+      "enabled": true,
+      "label": "Cash on Delivery",
+      "instructions": "Pay the courier when your parcel arrives."
+    }
+  },
+  "notifications": {
+    "email": {
+      "enabled": true,
+      "from": "orders@vaporpulse.test"
+    },
+    "whatsapp": {
+      "enabled": true,
+      "number": "+1-555-123-9876",
+      "signature": "Team VaporPulse"
+    }
+  },
+  "shipping": {
+    "default": "express",
+    "options": {
+      "express": {
+        "enabled": true,
+        "label": "Express Courier",
+        "base_rate": 14.95,
+        "per_item": 0.75,
+        "free_over": 150,
+        "eta": "1-2 business days"
+      },
+      "standard": {
+        "enabled": true,
+        "label": "Standard Tracked",
+        "base_rate": 9.95,
+        "per_item": 0,
+        "free_over": 90,
+        "eta": "3-5 business days"
+      },
+      "pickup": {
+        "enabled": true,
+        "label": "Click & Collect",
+        "base_rate": 0,
+        "per_item": 0,
+        "free_over": 0,
+        "eta": "Ready in 2 hours"
+      }
+    }
+  }
+}
