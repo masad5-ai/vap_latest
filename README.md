@@ -4,8 +4,13 @@ A neon-inspired PHP/MySQL-ready ecommerce prototype for a vape storefront with c
 
 ## Quick start
 1. Serve `public/` with PHP (e.g., `php -S 0.0.0.0:8000 -t public`).
-2. Log into the admin console via `/admin.php` using **admin@vaporpulse.test / admin123**.
+2. Log into the admin console via `/admin/index.php` using **admin@vaporpulse.test / admin123**.
 3. Update `src/config.php` with your MySQL credentials and swap JSON persistence for real tables when ready.
+
+## Pages
+
+- **Storefront**: `index.php` (home), `shop.php`, `cart.php`, `checkout.php`, `login.php`, and `account.php` for customers.
+- **Admin console**: `admin/index.php` dashboard plus dedicated screens for `products.php`, `orders.php`, `settings.php`, and `users.php`.
 
 ## Features
 - Customer registration/login, catalog browsing with search, cart management, checkout, saved profile, and order timeline.

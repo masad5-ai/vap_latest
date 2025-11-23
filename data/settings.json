@@ -3,30 +3,49 @@
     "store_name": "VaporPulse",
     "tagline": "Midnight luxuries and bold citrus twists.",
     "accent": "#6ce7ff",
+    "logo": "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=400&q=80",
+    "banner": "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=1200&q=80",
     "support_email": "support@vaporpulse.test",
+    "support_phone": "+61 400 000 000",
+    "address": "Vape District, Sydney NSW",
+    "hours": "Daily 9am – 9pm AEST",
     "whatsapp": "+1-555-123-9876"
+  },
+  "catalog": {
+    "categories": [
+      {"id": "devices", "name": "Devices", "description": "Flagship kits, pens, and disposables."},
+      {"id": "pods", "name": "Pods & Coils", "description": "Refills, pods, and mesh coils."},
+      {"id": "eliquid", "name": "E-Liquid", "description": "Signature flavors and nic-free blends."},
+      {"id": "accessories", "name": "Accessories", "description": "Chargers, cases, and drip tips."}
+    ]
   },
   "payments": {
     "custom_gateway": {
       "enabled": true,
       "label": "VaporPulse SecurePay",
-      "instructions": "Complete payment via our PCI-grade SecurePay modal."
+      "instructions": "Complete payment via our PCI-grade SecurePay modal.",
+      "merchant_id": "vaporpulse-demo"
     },
     "cod": {
       "enabled": true,
       "label": "Cash on Delivery",
-      "instructions": "Pay the courier when your parcel arrives."
+      "instructions": "Pay the courier when your parcel arrives.",
+      "merchant_id": ""
     }
   },
   "notifications": {
     "email": {
       "enabled": true,
-      "from": "orders@vaporpulse.test"
+      "from": "orders@vaporpulse.test",
+      "smtp_host": "smtp.example.com",
+      "smtp_user": "noreply@example.com"
     },
     "whatsapp": {
       "enabled": true,
       "number": "+1-555-123-9876",
-      "signature": "Team VaporPulse"
+      "signature": "Team VaporPulse",
+      "api_key": "whatsapp-demo-key",
+      "template": "order_update_v1"
     }
   },
   "shipping": {
@@ -38,7 +57,8 @@
         "base_rate": 14.95,
         "per_item": 0.75,
         "free_over": 150,
-        "eta": "1-2 business days"
+        "eta": "1-2 business days",
+        "zone": "Metro + Priority"
       },
       "standard": {
         "enabled": true,
@@ -46,7 +66,8 @@
         "base_rate": 9.95,
         "per_item": 0,
         "free_over": 90,
-        "eta": "3-5 business days"
+        "eta": "3-5 business days",
+        "zone": "Nationwide"
       },
       "pickup": {
         "enabled": true,
@@ -54,7 +75,8 @@
         "base_rate": 0,
         "per_item": 0,
         "free_over": 0,
-        "eta": "Ready in 2 hours"
+        "eta": "Ready in 2 hours",
+        "zone": "Storefront"
       }
     }
   }

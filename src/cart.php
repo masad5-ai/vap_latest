@@ -35,45 +35,68 @@ function clear_cart(): void
     $_SESSION['cart'] = [];
 }
 
-function shipping_options(): array
+function shipping_option_cost(array $option, float $subtotal, int $itemCount): float
+{
+    $shipping = $option['base_rate'] ?? 0;
+    if (!empty($option['per_item'])) {
+        $shipping += ($option['per_item'] * $itemCount);
+    }
+    if (isset($option['free_over']) && $subtotal >= $option['free_over']) {
+        $shipping = 0;
+    }
+    return round((float)$shipping, 2);
+}
+
+function shipping_quotes(float $subtotal, int $itemCount): array
 {
     $settings = load_settings();
     $options = $settings['shipping']['options'] ?? [];
-
-    return array_filter($options, fn($option) => !empty($option['enabled']));
-}
-
-function selected_shipping_method(): ?string
-{
-    ensure_session_started();
-    $options = shipping_options();
-    if (empty($options)) {
-        return null;
+    $quotes = [];
+    foreach ($options as $key => $option) {
+        if (empty($option['enabled'])) {
+            continue;
+        }
+        $quotes[$key] = [
+            'id' => $key,
+            'label' => $option['label'],
+            'eta' => $option['eta'],
+            'zone' => $option['zone'] ?? '',
+            'price' => shipping_option_cost($option, $subtotal, $itemCount),
+        ];
     }
 
-    $settings = load_settings();
-    $default = $settings['shipping']['default'] ?? array_key_first($options);
-    $selected = $_SESSION['shipping_method'] ?? $default;
+    return $quotes;
+}
 
-    if (!isset($options[$selected])) {
+function selected_shipping_method(array $quotes = []): ?string
+{
+    ensure_session_started();
+    if (empty($quotes)) {
+        $quotes = shipping_quotes(0, 0);
+    }
+    if (empty($quotes)) {
+        return null;
+    }
+    $default = load_settings()['shipping']['default'] ?? array_key_first($quotes);
+    $selected = $_SESSION['shipping_method'] ?? $default;
+    if (!isset($quotes[$selected])) {
         $selected = $default;
         $_SESSION['shipping_method'] = $selected;
     }
-
     return $selected;
 }
 
-function set_shipping_method(string $method): ?string
+function set_shipping_method(string $method, array $quotes = []): ?string
 {
     ensure_session_started();
-    $options = shipping_options();
-
-    if (isset($options[$method])) {
+    if (empty($quotes)) {
+        $quotes = shipping_quotes(0, 0);
+    }
+    if (isset($quotes[$method])) {
         $_SESSION['shipping_method'] = $method;
         return $method;
     }
-
-    return selected_shipping_method();
+    return selected_shipping_method($quotes);
 }
 
 function cart_totals(): array
@@ -90,31 +113,35 @@ function cart_totals(): array
         $product = $products[$id];
         $lineTotal = $product['price'] * $qty;
         $lines[] = [
-            'product' => $product,
+            'id' => $id,
+            'name' => $product['name'],
+            'category' => $product['category'] ?? '',
+            'price' => $product['price'],
             'quantity' => $qty,
-            'line_total' => $lineTotal,
+            'total' => $lineTotal,
         ];
         $subtotal += $lineTotal;
         $itemCount += $qty;
     }
-    $options = shipping_options();
-    $selectedKey = selected_shipping_method();
-    $selected = $selectedKey && isset($options[$selectedKey]) ? $options[$selectedKey] : null;
-
-    $shipping = 0;
-    if ($selected && $subtotal > 0) {
-        $shipping = $selected['base_rate'] ?? 0;
-        if (!empty($selected['per_item'])) {
-            $shipping += $selected['per_item'] * $itemCount;
-        }
-        if (isset($selected['free_over']) && $subtotal >= $selected['free_over']) {
-            $shipping = 0;
-        }
-    }
+    $quotes = shipping_quotes($subtotal, $itemCount);
+    $selectedKey = selected_shipping_method($quotes);
+    $selected = $selectedKey && isset($quotes[$selectedKey]) ? $quotes[$selectedKey] : null;
+    $shipping = $selected['price'] ?? 0;
 
     $tax = round($subtotal * 0.08, 2);
     $total = $subtotal + $shipping + $tax;
     $shipping_details = $selected ? array_merge($selected, ['key' => $selectedKey]) : null;
 
-    return compact('lines', 'subtotal', 'shipping', 'tax', 'total', 'shipping_details');
+    $quotesOut = array_values($quotes);
+
+    return [
+        'lines' => $lines,
+        'subtotal' => $subtotal,
+        'shipping' => $shipping,
+        'tax' => $tax,
+        'total' => $total,
+        'shipping_details' => $shipping_details,
+        'quotes' => $quotesOut,
+        'item_count' => $itemCount,
+    ];
 }
