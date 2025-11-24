@@ -9,7 +9,7 @@ if (!isset($settings)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($adminTitle) ?></title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
     <style>:root { --accent: <?= htmlspecialchars($settings['branding']['accent']) ?>; }</style>
 </head>
 <body class="admin">
@@ -33,13 +33,30 @@ if (!isset($settings)) {
             <a href="settings.php" class="<?= $adminPage === 'settings' ? 'active' : '' ?>">Branding</a>
             <a href="users.php" class="<?= $adminPage === 'users' ? 'active' : '' ?>">Users</a>
         </nav>
+        <div class="admin-support">
+            <p class="muted small-text">Storefront</p>
+            <a class="button ghost small" href="../index.php">View site</a>
+        </div>
     </aside>
     <main class="admin-content">
         <header class="admin-topbar">
             <div>
-                <p class="eyebrow">Control</p>
-                <h1><?= htmlspecialchars($adminTitle) ?></h1>
+                <p class="eyebrow">Control center</p>
+                <div class="admin-breadcrumbs">
+                    <span>Admin</span>
+                    <span class="crumb-sep">·</span>
+                    <strong><?= htmlspecialchars($adminTitle) ?></strong>
+                </div>
             </div>
-            <a class="button ghost" href="../index.php">View storefront</a>
+            <div class="admin-top-actions">
+                <a class="button ghost" href="../index.php">View storefront</a>
+                <div class="avatar-chip">
+                    <div class="avatar-dot"></div>
+                    <div>
+                        <strong><?= htmlspecialchars($user['name'] ?? 'Admin') ?></strong>
+                        <small class="muted">Role: <?= htmlspecialchars($user['role'] ?? 'admin') ?></small>
+                    </div>
+                </div>
+            </div>
         </header>
         <?php if (!empty($message)): ?><div class="flash"><?= htmlspecialchars($message) ?></div><?php endif; ?>

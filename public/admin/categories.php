@@ -4,6 +4,14 @@ require __DIR__ . '/bootstrap.php';
 $message = null;
 $settingsData = load_settings();
 $categories = $settingsData['catalog']['categories'] ?? [];
+$editId = $_GET['edit'] ?? null;
+$editing = null;
+foreach ($categories as $cat) {
+    if ($cat['id'] === $editId) {
+        $editing = $cat;
+        break;
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -27,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $category['description'] = trim($_POST['description']);
                 }
             }
+            unset($category);
             $message = 'Category updated';
         } elseif ($action === 'delete') {
             $categories = array_values(array_filter($categories, fn($c) => $c['id'] !== $_POST['id']));
@@ -42,40 +51,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $adminTitle = 'Categories';
 include __DIR__ . '/layout.php';
 ?>
-<section class="section admin-dual">
-    <div class="panel">
-        <p class="eyebrow">Taxonomy</p>
-        <h3>Create category</h3>
-        <form method="post" class="stacked">
-            <input type="hidden" name="action" value="add">
-            <label>Slug / ID <input name="id" placeholder="devices, pods, accessories"></label>
-            <label>Name <input required name="name" placeholder="Devices"></label>
-            <label>Description <textarea name="description" placeholder="What belongs in this collection?"></textarea></label>
-            <button class="button primary" type="submit">Add category</button>
-        </form>
-    </div>
+<section class="section admin-grid">
     <div class="panel">
         <div class="section-header compact">
             <div>
-                <p class="eyebrow">Collections</p>
-                <h3>Manage categories</h3>
+                <p class="eyebrow">Taxonomy</p>
+                <h3>Category grid</h3>
+                <p class="muted">Professional grid with edit/view/delete actions to keep collections tidy.</p>
             </div>
         </div>
-        <div class="stacked">
-            <?php foreach ($categories as $category): ?>
-                <form method="post" class="card compact">
-                    <input type="hidden" name="action" value="update">
-                    <input type="hidden" name="id" value="<?= htmlspecialchars($category['id']) ?>">
-                    <label>Slug / ID <input name="id_display" value="<?= htmlspecialchars($category['id']) ?>" disabled></label>
-                    <label>Name <input name="name" value="<?= htmlspecialchars($category['name']) ?>"></label>
-                    <label>Description <textarea name="description"><?= htmlspecialchars($category['description']) ?></textarea></label>
-                    <div class="cta-row">
-                        <button class="button ghost" type="submit">Save</button>
-                        <button class="button danger" name="action" value="delete" onclick="return confirm('Delete category?')">Delete</button>
-                    </div>
-                </form>
-            <?php endforeach; ?>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Slug</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($categories as $category): ?>
+                    <tr>
+                        <td><span class="pill muted"><?= htmlspecialchars($category['id']) ?></span></td>
+                        <td><strong><?= htmlspecialchars($category['name']) ?></strong></td>
+                        <td class="small-text"><?= htmlspecialchars($category['description']) ?></td>
+                        <td>
+                            <div class="table-actions">
+                                <a class="button small ghost" href="categories.php?edit=<?= urlencode($category['id']) ?>#editor">Edit</a>
+                                <form method="post" class="inline-form" onsubmit="return confirm('Delete category?');">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="id" value="<?= htmlspecialchars($category['id']) ?>">
+                                    <button class="button danger small" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
+    </div>
+    <div class="panel" id="editor">
+        <p class="eyebrow">Category editor</p>
+        <h3><?= $editing ? 'Update category' : 'Create category' ?></h3>
+        <p class="muted">Focused form for clean IDs, labels, and merchandising copy.</p>
+        <form method="post" class="stacked">
+            <input type="hidden" name="action" value="<?= $editing ? 'update' : 'add' ?>">
+            <?php if ($editing): ?><input type="hidden" name="id" value="<?= htmlspecialchars($editing['id']) ?>"><?php endif; ?>
+            <label>Slug / ID <input name="id" value="<?= htmlspecialchars($editing['id'] ?? '') ?>" placeholder="devices, pods, accessories" <?= $editing ? 'readonly' : '' ?>></label>
+            <label>Name <input required name="name" value="<?= htmlspecialchars($editing['name'] ?? '') ?>" placeholder="Devices"></label>
+            <label>Description <textarea name="description" placeholder="What belongs in this collection?"><?= htmlspecialchars($editing['description'] ?? '') ?></textarea></label>
+            <div class="cta-row">
+                <button class="button primary" type="submit"><?= $editing ? 'Save changes' : 'Add category' ?></button>
+                <?php if ($editing): ?><a class="button ghost" href="categories.php">Cancel</a><?php endif; ?>
+            </div>
+        </form>
     </div>
 </section>
 <?php include __DIR__ . '/footer.php'; ?>

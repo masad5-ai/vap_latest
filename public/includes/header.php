@@ -11,7 +11,7 @@ $defaultShipping = shipping_default_option($settings);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
     <style>:root { --accent: <?= htmlspecialchars($settings['branding']['accent']) ?>; }</style>
 </head>
 <body class="page-<?= htmlspecialchars($page ?? 'home') ?>">

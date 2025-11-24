@@ -5,6 +5,8 @@ $message = null;
 $settingsData = load_settings();
 $shipping = $settingsData['shipping'] ?? ['options' => []];
 $options = $shipping['options'];
+$editId = $_GET['edit'] ?? null;
+$editing = $editId && isset($options[$editId]) ? ['id' => $editId] + $options[$editId] : null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -56,29 +58,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $adminTitle = 'Shipping & calculations';
 include __DIR__ . '/layout.php';
 ?>
-<section class="section admin-dual">
-    <div class="panel">
-        <p class="eyebrow">Add method</p>
-        <h3>Courier, pickup, or zone</h3>
-        <form method="post" class="stacked">
-            <input type="hidden" name="action" value="add">
-            <label>Key <input name="id" placeholder="express, same-day"></label>
-            <label>Label <input required name="label" placeholder="Same-day metro"></label>
-            <label>ETA <input required name="eta" placeholder="Delivered tonight"></label>
-            <div class="grid grid-3 tight">
-                <label>Base rate <input type="number" step="0.01" name="base_rate" value="12.00"></label>
-                <label>Per item <input type="number" step="0.01" name="per_item" value="0"></label>
-                <label>Free over <input type="number" step="0.01" name="free_over" value="150"></label>
-            </div>
-            <label>Zone / notes <input name="zone" placeholder="Metro, regional, pickup"></label>
-            <button class="button primary" type="submit">Add method</button>
-        </form>
-    </div>
+<section class="section admin-grid">
     <div class="panel">
         <div class="section-header compact">
             <div>
                 <p class="eyebrow">Live calculator</p>
                 <h3>Shipping options</h3>
+                <p class="muted">Grid view with enable toggles, zones, and quick edit actions.</p>
             </div>
             <form method="post" class="inline-form">
                 <input type="hidden" name="action" value="update">
@@ -90,31 +76,74 @@ include __DIR__ . '/layout.php';
                 <button class="button ghost" type="submit">Save default</button>
             </form>
         </div>
-        <div class="stacked">
-            <?php foreach ($options as $key => $option): ?>
-                <form method="post" class="card compact stacked">
-                    <input type="hidden" name="action" value="update">
-                    <input type="hidden" name="shipping_default" value="<?= htmlspecialchars($shipping['default'] ?? '') ?>">
-                    <div class="pill-row">
-                        <label class="pill-row">Enable <input type="checkbox" name="shipping[<?= htmlspecialchars($key) ?>][enabled]" <?= !empty($option['enabled']) ? 'checked' : '' ?>></label>
-                        <span class="pill muted">ETA <?= htmlspecialchars($option['eta']) ?></span>
-                    </div>
-                    <label>Label <input name="shipping[<?= htmlspecialchars($key) ?>][label]" value="<?= htmlspecialchars($option['label']) ?>"></label>
-                    <label>ETA <input name="shipping[<?= htmlspecialchars($key) ?>][eta]" value="<?= htmlspecialchars($option['eta']) ?>"></label>
-                    <label>Zone / notes <input name="shipping[<?= htmlspecialchars($key) ?>][zone]" value="<?= htmlspecialchars($option['zone'] ?? '') ?>"></label>
-                    <div class="grid grid-3 tight">
-                        <label>Base rate <input type="number" step="0.01" name="shipping[<?= htmlspecialchars($key) ?>][base_rate]" value="<?= htmlspecialchars($option['base_rate']) ?>"></label>
-                        <label>Per item <input type="number" step="0.01" name="shipping[<?= htmlspecialchars($key) ?>][per_item]" value="<?= htmlspecialchars($option['per_item']) ?>"></label>
-                        <label>Free over <input type="number" step="0.01" name="shipping[<?= htmlspecialchars($key) ?>][free_over]" value="<?= htmlspecialchars($option['free_over']) ?>"></label>
-                    </div>
-                    <div class="cta-row">
-                        <button class="button ghost" type="submit">Save changes</button>
-                        <button class="button danger" name="action" value="delete" onclick="return confirm('Delete shipping method?')">Delete</button>
-                        <input type="hidden" name="id" value="<?= htmlspecialchars($key) ?>">
-                    </div>
-                </form>
-            <?php endforeach; ?>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Label</th>
+                    <th>Zone</th>
+                    <th>Rates</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($options as $key => $option): ?>
+                    <tr>
+                        <td><span class="pill muted"><?= htmlspecialchars($key) ?></span></td>
+                        <td>
+                            <div class="stacked tight">
+                                <strong><?= htmlspecialchars($option['label']) ?></strong>
+                                <span class="small-text">ETA <?= htmlspecialchars($option['eta']) ?></span>
+                            </div>
+                        </td>
+                        <td><?= htmlspecialchars($option['zone'] ?? 'All zones') ?></td>
+                        <td class="small-text">Base $<?= number_format((float)$option['base_rate'], 2) ?> · +$<?= number_format((float)$option['per_item'], 2) ?>/item · Free over $<?= number_format((float)$option['free_over'], 2) ?></td>
+                        <td><span class="status-pill <?= !empty($option['enabled']) ? 'active' : 'draft' ?>"><?= !empty($option['enabled']) ? 'Enabled' : 'Disabled' ?></span></td>
+                        <td>
+                            <div class="table-actions">
+                                <a class="button small ghost" href="shipping.php?edit=<?= urlencode($key) ?>#editor">Edit</a>
+                                <form method="post" class="inline-form" onsubmit="return confirm('Delete shipping method?');">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="id" value="<?= htmlspecialchars($key) ?>">
+                                    <button class="button danger small" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
+    </div>
+    <div class="panel" id="editor">
+        <p class="eyebrow">Method editor</p>
+        <h3><?= $editing ? 'Edit shipping method' : 'Add method' ?></h3>
+        <p class="muted">Use the editor for courier, pickup, or zone-based rates without scrolling the grid.</p>
+        <form method="post" class="stacked">
+            <input type="hidden" name="action" value="<?= $editing ? 'update' : 'add' ?>">
+            <?php if ($editing): ?>
+                <input type="hidden" name="shipping_default" value="<?= htmlspecialchars($shipping['default'] ?? '') ?>">
+                <input type="hidden" name="id" value="<?= htmlspecialchars($editing['id']) ?>">
+            <?php endif; ?>
+            <label>Key <input name="id" value="<?= htmlspecialchars($editing['id'] ?? '') ?>" placeholder="express, same-day" <?= $editing ? 'readonly' : '' ?>></label>
+            <label>Label <input required name="<?= $editing ? 'shipping[' . htmlspecialchars($editing['id']) . '][label]' : 'label' ?>" value="<?= htmlspecialchars($editing['label'] ?? '') ?>" placeholder="Same-day metro"></label>
+            <label>ETA <input required name="<?= $editing ? 'shipping[' . htmlspecialchars($editing['id']) . '][eta]' : 'eta' ?>" value="<?= htmlspecialchars($editing['eta'] ?? '') ?>" placeholder="Delivered tonight"></label>
+            <div class="grid grid-3 tight">
+                <label>Base rate <input type="number" step="0.01" name="<?= $editing ? 'shipping[' . htmlspecialchars($editing['id']) . '][base_rate]' : 'base_rate' ?>" value="<?= htmlspecialchars($editing['base_rate'] ?? 12.00) ?>"></label>
+                <label>Per item <input type="number" step="0.01" name="<?= $editing ? 'shipping[' . htmlspecialchars($editing['id']) . '][per_item]' : 'per_item' ?>" value="<?= htmlspecialchars($editing['per_item'] ?? 0) ?>"></label>
+                <label>Free over <input type="number" step="0.01" name="<?= $editing ? 'shipping[' . htmlspecialchars($editing['id']) . '][free_over]' : 'free_over' ?>" value="<?= htmlspecialchars($editing['free_over'] ?? 150) ?>"></label>
+            </div>
+            <label>Zone / notes <input name="<?= $editing ? 'shipping[' . htmlspecialchars($editing['id']) . '][zone]' : 'zone' ?>" value="<?= htmlspecialchars($editing['zone'] ?? '') ?>" placeholder="Metro, regional, pickup"></label>
+            <?php if ($editing): ?>
+                <label class="pill-row">Enable <input type="checkbox" name="shipping[<?= htmlspecialchars($editing['id']) ?>][enabled]" <?= !empty($editing['enabled']) ? 'checked' : '' ?>></label>
+            <?php endif; ?>
+            <div class="cta-row">
+                <button class="button primary" type="submit"><?= $editing ? 'Save changes' : 'Add method' ?></button>
+                <?php if ($editing): ?><a class="button ghost" href="shipping.php">Cancel</a><?php endif; ?>
+            </div>
+        </form>
     </div>
 </section>
 <?php include __DIR__ . '/footer.php'; ?>
