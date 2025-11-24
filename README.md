@@ -8,10 +8,10 @@ A neon-inspired PHP/MySQL-ready ecommerce prototype for a vape storefront with c
 3. Update `src/config.php` with your MySQL credentials and swap JSON persistence for real tables when ready.
 
 ### Bringing in the provided UI templates
-The requested Vapor-inspired HTML templates are hosted at `https://github.com/masad5-ai/theme.git`. Network restrictions in this environment block direct access (403 on clone). To use the supplied designs:
+The requested Vapor-inspired HTML templates are hosted at `https://github.com/masad5-ai/theme.git`. Network restrictions in this environment block direct access (403 on clone). The repo now includes a `theme/` folder to receive those assets. To use the supplied designs:
 - Clone or download the theme repository on a machine with GitHub access.
-- Copy the **admin** HTML files into `public/admin-theme/` and the **storefront** HTML files into `public/theme/` within this project.
-- Once copied, run `php -S localhost:8000 -t public` and wire the PHP routes to those templates.
+- Copy the **admin** HTML files into `theme/admin/` and the **storefront** HTML files into `theme/front/` within this project.
+- Run `php scripts/sync_theme.php` to mirror them into `public/admin-theme/` and `public/theme/` for previewing with the existing PHP routes.
 
 See `docs/THEME_IMPORT.md` for a short walkthrough. If you can provide a ZIP of the `admin` and `front` folders, I can hook them into the PHP views directly.
 
